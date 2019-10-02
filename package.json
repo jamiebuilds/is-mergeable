@@ -1,0 +1,68 @@
+{
+	"name": "is-mergeable",
+	"version": "0.0.0",
+	"description": "Check if a GitHub Pull Request is in a (most likely) mergeable state",
+	"main": "index.js",
+	"author": "Jamie Kyle <me@thejameskyle.com>",
+	"license": "MIT",
+	"bin": {
+		"is-mergeable": "dist/cli.js"
+	},
+	"files": [
+		"dist"
+	],
+	"keywords": [
+		"github",
+		"gh",
+		"api",
+		"pull",
+		"request",
+		"pr",
+		"merge",
+		"rebase",
+		"mergeable",
+		"mergable",
+		"branch",
+		"protections",
+		"ci",
+		"check",
+		"status",
+		"review",
+		"approve",
+		"approval",
+		"requested",
+		"changes",
+		"rejected"
+	],
+	"scripts": {
+		"build": "tsc && chmod +x dist/cli.js",
+		"test": "ava",
+		"format": "prettier --write '**'",
+		"prepublishOnly": "npm run -s build"
+	},
+	"devDependencies": {
+		"@types/meow": "^5.0.0",
+		"ava": "^2.4.0",
+		"husky": "^3.0.5",
+		"lint-staged": "^9.4.0",
+		"prettier": "^1.18.2",
+		"typescript": "^3.6.3"
+	},
+	"dependencies": {
+		"@octokit/rest": "^16.30.1",
+		"chalk": "^2.4.2",
+		"meow": "^5.0.0",
+		"terminal-link": "^2.0.0"
+	},
+	"husky": {
+		"hooks": {
+			"pre-commit": "lint-staged"
+		}
+	},
+	"lint-staged": {
+		"**": [
+			"prettier --write",
+			"git add"
+		]
+	}
+}
