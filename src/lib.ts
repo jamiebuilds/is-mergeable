@@ -78,13 +78,28 @@ export default async function isMergable(opts: Options): Promise<Result> {
 	let errorChecks: { name: string }[] = []
 	let pendingChecks: { name: string }[] = []
 
+	let latestReviews: Map<
+		string,
+		Octokit.PullsListReviewsResponseItem
+	> = new Map()
+
 	for (let review of reviews.data) {
+		let prev = latestReviews.get(review.user.login)
+		if (prev && prev.id > review.id) {
+			continue
+		}
+		latestReviews.set(review.user.login, review)
+	}
+
+	for (let review of latestReviews.values()) {
 		if (review.state === "APPROVED") {
 			// no timestamp provided, auto-dismiss?
 			approvedReviews.push({ name: review.user.login })
 		} else if (review.state === "CHANGES_REQUESTED") {
 			// no timestamp provided, auto-dismiss?
 			requestedChangesReviews.push({ name: review.user.login })
+		} else if (review.state === "DISMISSED") {
+			continue // ignore
 		} else {
 			throw new Error(`Unexpected review.state "${review.state}"`)
 		}
