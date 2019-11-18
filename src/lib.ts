@@ -100,6 +100,8 @@ export default async function isMergable(opts: Options): Promise<Result> {
 			requestedChangesReviews.push({ name: review.user.login })
 		} else if (review.state === "DISMISSED") {
 			continue // ignore
+		} else if (review.state === "COMMENTED") {
+			continue // ignore
 		} else {
 			throw new Error(`Unexpected review.state "${review.state}"`)
 		}
