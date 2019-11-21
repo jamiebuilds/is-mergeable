@@ -25,6 +25,8 @@ let cli = meow({
 			--codeowners
 			--strict-reviews
 
+			--ignore-git-mergeability
+
     Examples
 			$ is-mergeable \
 				--owner jamiebuilds \
@@ -43,6 +45,7 @@ let cli = meow({
 		minReviews: { type: "string" },
 		// codeowners: { type: "boolean" },
 		// strictReviews: { type: "boolean" },
+		ignoreGitMergeability: { type: "boolean" },
 	},
 })
 

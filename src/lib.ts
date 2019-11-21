@@ -188,8 +188,10 @@ export default async function isMergable(opts: Options): Promise<Result> {
 	if (pullRequestState !== "open") {
 		isReadyToMerge = false
 	}
-	if (!(pullRequeseGitMergeable || pullRequeseGitRebaseable)) {
-		isReadyToMerge = false
+	if (!opts.ignoreGitMergeability) {
+		if (!(pullRequeseGitMergeable || pullRequeseGitRebaseable)) {
+			isReadyToMerge = false
+		}
 	}
 	if (!hasRequiredReviews) {
 		isReadyToMerge = false

@@ -10,6 +10,7 @@ export interface Options {
 	minReviews?: number
 	// codeowners?: boolean
 	// strictReviews?: boolean
+	ignoreGitMergeability?: boolean
 }
 
 export interface Result {

@@ -86,6 +86,11 @@ export function cliToOptions(flags: unknown, env: unknown): Options {
 	// 	"--strict-reviews must be a boolean or undefined",
 	// )
 
+	let ignoreGitMergeability = maybe(toBoolean)(
+		flags.ignoreGitMergeability,
+		"--ignore-git-mergeability must be a boolean or undefined",
+	)
+
 	return {
 		apiToken,
 		owner,
@@ -96,5 +101,6 @@ export function cliToOptions(flags: unknown, env: unknown): Options {
 		minReviews,
 		// codeowners,
 		// strictReviews,
+		ignoreGitMergeability,
 	}
 }
