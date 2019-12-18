@@ -88,6 +88,10 @@ export default async function isMergable(opts: Options): Promise<Result> {
 		if (prev && prev.id > review.id) {
 			continue
 		}
+		// Ignore review comments, they aren't important
+		if (review.state === "COMMENTED") {
+			continue
+		}
 		latestReviews.set(review.user.login, review)
 	}
 
