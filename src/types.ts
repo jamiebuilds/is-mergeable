@@ -36,4 +36,5 @@ export interface Result {
 	failureChecks: { name: string }[]
 	errorChecks: { name: string }[]
 	pendingChecks: { name: string }[]
+	missingChecks: { name: string }[]
 }

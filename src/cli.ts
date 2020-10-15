@@ -118,11 +118,12 @@ async function main(options: Options) {
 
 	println(
 		result.hasRequiredChecks
-			? "  {green {bold ✓ Checks:} {italic (%s successes, %s failures, %s pending)}}"
-			: "  {red {bold ✗ Checks:} {italic (%s successes, %s failures, %s pending)}}",
+			? "  {green {bold ✓ Checks:} {italic (%s successes, %s failures, %s pending, %s missing)}}"
+			: "  {red {bold ✗ Checks:} {italic (%s successes, %s failures, %s pending, %s missing)}}",
 		result.successChecks.length,
 		result.failureChecks.length + result.errorChecks.length,
 		result.pendingChecks.length,
+		result.missingChecks.length,
 	)
 
 	for (let check of result.successChecks) {
@@ -136,6 +137,9 @@ async function main(options: Options) {
 	}
 	for (let check of result.pendingChecks) {
 		println("    {yellow {bold •} %s pending}", check.name)
+	}
+	for (let check of result.missingChecks) {
+		println("    {red {bold ?} %s missing}", check.name)
 	}
 	println("")
 
