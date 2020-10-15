@@ -77,6 +77,7 @@ export default async function isMergable(opts: Options): Promise<Result> {
 	let failureChecks: { name: string }[] = []
 	let errorChecks: { name: string }[] = []
 	let pendingChecks: { name: string }[] = []
+	let missingChecks: { name: string }[] = []
 
 	let latestReviews: Map<
 		string,
@@ -185,6 +186,17 @@ export default async function isMergable(opts: Options): Promise<Result> {
 			if (!match) {
 				hasRequiredChecks = false
 			}
+
+			let checkInList = successChecks
+				.concat(pendingChecks)
+				.concat(failureChecks)
+				.some(check => {
+					return check.name === checkName
+				})
+			// check not found
+			if (!checkInList) {
+				missingChecks.push({ name: checkName })
+			}
 		}
 	}
 
@@ -227,5 +239,6 @@ export default async function isMergable(opts: Options): Promise<Result> {
 		failureChecks,
 		errorChecks,
 		pendingChecks,
+		missingChecks,
 	}
 }
