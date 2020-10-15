@@ -1,6 +1,6 @@
 {
 	"name": "is-mergeable",
-	"version": "1.1.1",
+	"version": "1.2.0",
 	"description": "Check if a GitHub Pull Request is in a (most likely) mergeable state",
 	"main": "index.js",
 	"author": "Jamie Kyle <me@thejameskyle.com>",
