@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import Octokit from "@octokit/rest"
+import { Octokit, RestEndpointMethodTypes } from "@octokit/rest"
 import { Options, Result } from "./types"
 
 export default async function isMergable(opts: Options): Promise<Result> {
@@ -34,7 +34,7 @@ export default async function isMergable(opts: Options): Promise<Result> {
 			repo: opts.repo,
 			pull_number: opts.pullRequest,
 		}),
-		octokit.pulls.listReviewRequests({
+		octokit.pulls.listRequestedReviewers({
 			owner: opts.owner,
 			repo: opts.repo,
 			pull_number: opts.pullRequest,
@@ -44,7 +44,7 @@ export default async function isMergable(opts: Options): Promise<Result> {
 			repo: opts.repo,
 			pull_number: opts.pullRequest,
 		}),
-		octokit.repos.listStatusesForRef({
+		octokit.repos.listCommitStatusesForRef({
 			owner: opts.owner,
 			repo: opts.repo,
 			ref: pullRef,
@@ -61,13 +61,15 @@ export default async function isMergable(opts: Options): Promise<Result> {
 	let pullRequestNumber = pullRequest.data.number
 	let pullRequestTitle = pullRequest.data.title
 	let pullRequestState = pullRequest.data.state
-	let pullRequestCreator = pullRequest.data.user.login
+	let pullRequestCreator = pullRequest.data.user
+		? pullRequest.data.user.login
+		: "unknownCreator"
 	let pullRequestCommits = pullRequest.data.commits
 	let pullRequestBaseRef = pullRequest.data.base.ref
 	let pullRequestHeadRef = pullRequest.data.head.ref
 	let pullRequestUrl = pullRequest.data.html_url
-	let pullRequeseGitMergeable = pullRequest.data.mergeable
-	let pullRequeseGitRebaseable = pullRequest.data.rebaseable
+	let pullRequeseGitMergeable = pullRequest.data.mergeable || false
+	let pullRequeseGitRebaseable = pullRequest.data.rebaseable || false
 
 	let approvedReviews: { name: string }[] = []
 	let requestedChangesReviews: { name: string }[] = []
@@ -79,13 +81,11 @@ export default async function isMergable(opts: Options): Promise<Result> {
 	let pendingChecks: { name: string }[] = []
 	let missingChecks: { name: string }[] = []
 
-	let latestReviews: Map<
-		string,
-		Octokit.PullsListReviewsResponseItem
-	> = new Map()
+	let latestReviews: Map<string, typeof reviews.data[0]> = new Map()
 
 	for (let review of reviews.data) {
-		let prev = latestReviews.get(review.user.login)
+		const userLogin = review.user ? review.user.login : "unknownReviewer"
+		let prev = latestReviews.get(userLogin)
 		if (prev && prev.id > review.id) {
 			continue
 		}
@@ -93,16 +93,17 @@ export default async function isMergable(opts: Options): Promise<Result> {
 		if (review.state === "COMMENTED") {
 			continue
 		}
-		latestReviews.set(review.user.login, review)
+		latestReviews.set(userLogin, review)
 	}
 
 	for (let review of latestReviews.values()) {
+		const userLogin = review.user ? review.user.login : "unknownReviewer"
 		if (review.state === "APPROVED") {
 			// no timestamp provided, auto-dismiss?
-			approvedReviews.push({ name: review.user.login })
+			approvedReviews.push({ name: userLogin })
 		} else if (review.state === "CHANGES_REQUESTED") {
 			// no timestamp provided, auto-dismiss?
-			requestedChangesReviews.push({ name: review.user.login })
+			requestedChangesReviews.push({ name: userLogin })
 		} else if (review.state === "DISMISSED") {
 			continue // ignore
 		} else if (review.state === "COMMENTED") {
@@ -119,10 +120,7 @@ export default async function isMergable(opts: Options): Promise<Result> {
 		pendingReviewRequests.push({ name: reviewRequest.login })
 	}
 
-	let latestStatuses: Map<
-		string,
-		Octokit.ReposListStatusesForRefResponseItem
-	> = new Map()
+	let latestStatuses: Map<string, typeof statuses.data[0]> = new Map()
 
 	for (let status of statuses.data) {
 		let prev = latestStatuses.get(status.context)
