@@ -44,7 +44,8 @@ export default async function isMergable(opts: Options): Promise<Result> {
 			repo: opts.repo,
 			pull_number: opts.pullRequest,
 		}),
-		octokit.repos.listStatusesForRef({
+		// this is not ideal, but their  type definition does not allow for passing the object notation
+		octokit.paginate("GET /repos/:owner/:repo/statuses/:ref", {
 			owner: opts.owner,
 			repo: opts.repo,
 			ref: pullRef,
@@ -124,7 +125,8 @@ export default async function isMergable(opts: Options): Promise<Result> {
 		Octokit.ReposListStatusesForRefResponseItem
 	> = new Map()
 
-	for (let status of statuses.data) {
+	// sorry for `as` - paginate returns as any[], so we have to cast this somewhere
+	for (let status of statuses as Octokit.ReposListStatusesForRefResponseItem[]) {
 		let prev = latestStatuses.get(status.context)
 		if (prev && new Date(prev.updated_at) > new Date(status.updated_at)) {
 			continue
