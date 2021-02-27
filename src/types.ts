@@ -1,5 +1,3 @@
-import Octokit from "@octokit/rest"
-
 export interface Options {
 	apiToken: string
 	owner: string
