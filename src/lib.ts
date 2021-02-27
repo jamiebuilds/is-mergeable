@@ -1,5 +1,9 @@
 #!/usr/bin/env node
-import { Octokit, RestEndpointMethodTypes } from "@octokit/rest"
+import { Octokit } from "@octokit/rest"
+import {
+	GetResponseDataTypeFromEndpointMethod,
+	GetResponseTypeFromEndpointMethod,
+} from "@octokit/types"
 import { Options, Result } from "./types"
 
 export default async function isMergable(opts: Options): Promise<Result> {
@@ -68,8 +72,8 @@ export default async function isMergable(opts: Options): Promise<Result> {
 	let pullRequestBaseRef = pullRequest.data.base.ref
 	let pullRequestHeadRef = pullRequest.data.head.ref
 	let pullRequestUrl = pullRequest.data.html_url
-	let pullRequeseGitMergeable = pullRequest.data.mergeable || false
-	let pullRequeseGitRebaseable = pullRequest.data.rebaseable || false
+	let pullRequeseGitMergeable = pullRequest.data.mergeable ?? false
+	let pullRequeseGitRebaseable = pullRequest.data.rebaseable ?? false
 
 	let approvedReviews: { name: string }[] = []
 	let requestedChangesReviews: { name: string }[] = []
@@ -81,10 +85,13 @@ export default async function isMergable(opts: Options): Promise<Result> {
 	let pendingChecks: { name: string }[] = []
 	let missingChecks: { name: string }[] = []
 
-	let latestReviews: Map<string, typeof reviews.data[0]> = new Map()
+	let latestReviews: Map<
+		string,
+		GetResponseDataTypeFromEndpointMethod<typeof octokit.pulls.listReviews>
+	> = new Map()
 
 	for (let review of reviews.data) {
-		const userLogin = review.user ? review.user.login : "unknownReviewer"
+		const userLogin = review.user?.login ?? "unknownReviewer"
 		let prev = latestReviews.get(userLogin)
 		if (prev && prev.id > review.id) {
 			continue
@@ -97,7 +104,7 @@ export default async function isMergable(opts: Options): Promise<Result> {
 	}
 
 	for (let review of latestReviews.values()) {
-		const userLogin = review.user ? review.user.login : "unknownReviewer"
+		const userLogin = review.user?.login ?? "unknownReviewer"
 		if (review.state === "APPROVED") {
 			// no timestamp provided, auto-dismiss?
 			approvedReviews.push({ name: userLogin })
@@ -120,7 +127,12 @@ export default async function isMergable(opts: Options): Promise<Result> {
 		pendingReviewRequests.push({ name: reviewRequest.login })
 	}
 
-	let latestStatuses: Map<string, typeof statuses.data[0]> = new Map()
+	let latestStatuses: Map<
+		string,
+		GetResponseDataTypeFromEndpointMethod<
+			typeof octokit.repos.listCommitStatusesForRef
+		>
+	> = new Map()
 
 	for (let status of statuses.data) {
 		let prev = latestStatuses.get(status.context)
@@ -180,7 +192,7 @@ export default async function isMergable(opts: Options): Promise<Result> {
 
 	if (Array.isArray(opts.checks)) {
 		for (let checkName of opts.checks) {
-			let match = successChecks.find(check => check.name === checkName)
+			let match = successChecks.find((check) => check.name === checkName)
 			if (!match) {
 				hasRequiredChecks = false
 			}
@@ -188,7 +200,7 @@ export default async function isMergable(opts: Options): Promise<Result> {
 			let checkInList = successChecks
 				.concat(pendingChecks)
 				.concat(failureChecks)
-				.some(check => {
+				.some((check) => {
 					return check.name === checkName
 				})
 			// check not found
